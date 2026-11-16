@@ -1,0 +1,168 @@
+PROTOCOL: WRITE_INVALIDATE_WRITE_THROUGH
+=============================================================================================================================================================
+Serial | Event                        | Memory | P1 Cache                           | P2 Cache                           | P3 Cache
+       |                              | X   Z  | Val(X)  State(X)  Val(Z)  State(Z) | Val(X)  State(X)  Val(Z)  State(Z) | Val(X)  State(X)  Val(Z)  State(Z)
+=============================================================================================================================================================
+0      | Initial State                | 10  80 | -       -         -       -        | -       -         -       -        | -       -         -       -
+1      | P1 reads X (Read-Miss)       | 10  80 | 10      VALID     -       -        | -       -         -       -        | -       -         -       -
+2      | P2 reads X (Read-Miss)       | 10  80 | 10      VALID     -       -        | 10      VALID     -       -        | -       -         -       -
+3      | P3 reads X (Read-Miss)       | 10  80 | 10      VALID     -       -        | 10      VALID     -       -        | 10      VALID     -       -
+4      | P1 updates X=35 (Write-Hit)  | 35  80 | 35      VALID     -       -        | 10      INV       -       -        | 10      INV       -       -
+5      | P1 reads Z (Read-Miss)       | 35  80 | 35      VALID     80      VALID    | 10      INV       -       -        | 10      INV       -       -
+6      | P2 reads X (Read-Miss)       | 35  80 | 35      VALID     80      VALID    | 35      VALID     -       -        | 10      INV       -       -
+7      | P3 updates X=15 (Write-Miss) | 15  80 | 35      INV       80      VALID    | 35      INV       -       -        | 15      VALID     -       -
+8      | P1 updates Z=81 (Write-Hit)  | 15  81 | 35      INV       81      VALID    | 35      INV       -       -        | 15      VALID     -       -
+=============================================================================================================================================================
+
+Final state
+-----------
+Memory : X=15, Z=81
+P1     : X=35 (INV), Z=81 (VALID)
+P2     : X=35 (INV), Z=-
+P3     : X=15 (VALID), Z=-
+
+Statistics
+----------
+Read hits  / misses      : 0 / 5
+Write hits / misses      : 2 / 1
+Replacements             : 0
+Bus invalidations        : 3
+Bus update broadcasts    : 0
+Memory write-backs       : 0
+Memory write-throughs    : 3
+
+
+PROTOCOL: WRITE_INVALIDATE_WRITE_BACK
+=============================================================================================================================================================
+Serial | Event                        | Memory | P1 Cache                           | P2 Cache                           | P3 Cache
+       |                              | X   Z  | Val(X)  State(X)  Val(Z)  State(Z) | Val(X)  State(X)  Val(Z)  State(Z) | Val(X)  State(X)  Val(Z)  State(Z)
+=============================================================================================================================================================
+0      | Initial State                | 10  80 | -       -         -       -        | -       -         -       -        | -       -         -       -
+1      | P1 reads X (Read-Miss)       | 10  80 | 10      RO        -       -        | -       -         -       -        | -       -         -       -
+2      | P2 reads X (Read-Miss)       | 10  80 | 10      RO        -       -        | 10      RO        -       -        | -       -         -       -
+3      | P3 reads X (Read-Miss)       | 10  80 | 10      RO        -       -        | 10      RO        -       -        | 10      RO        -       -
+4      | P1 updates X=35 (Write-Hit)  | 10  80 | 35      RW        -       -        | 10      INV       -       -        | 10      INV       -       -
+5      | P1 reads Z (Read-Miss)       | 10  80 | 35      RW        80      RO       | 10      INV       -       -        | 10      INV       -       -
+6      | P2 reads X (Read-Miss)       | 35  80 | 35      RO        80      RO       | 35      RO        -       -        | 10      INV       -       -
+7      | P3 updates X=15 (Write-Miss) | 35  80 | 35      INV       80      RO       | 35      INV       -       -        | 15      RW        -       -
+8      | P1 updates Z=81 (Write-Hit)  | 35  80 | 35      INV       81      RW       | 35      INV       -       -        | 15      RW        -       -
+=============================================================================================================================================================
+
+Final state
+-----------
+Memory : X=35, Z=80
+P1     : X=35 (INV), Z=81 (RW)
+P2     : X=35 (INV), Z=-
+P3     : X=15 (RW), Z=-
+
+Statistics
+----------
+Read hits  / misses      : 0 / 5
+Write hits / misses      : 2 / 1
+Replacements             : 0
+Bus invalidations        : 3
+Bus update broadcasts    : 0
+Memory write-backs       : 1
+Memory write-throughs    : 0
+
+
+PROTOCOL: WRITE_ONCE
+=============================================================================================================================================================
+Serial | Event                        | Memory | P1 Cache                           | P2 Cache                           | P3 Cache
+       |                              | X   Z  | Val(X)  State(X)  Val(Z)  State(Z) | Val(X)  State(X)  Val(Z)  State(Z) | Val(X)  State(X)  Val(Z)  State(Z)
+=============================================================================================================================================================
+0      | Initial State                | 10  80 | -       -         -       -        | -       -         -       -        | -       -         -       -
+1      | P1 reads X (Read-Miss)       | 10  80 | 10      VALID     -       -        | -       -         -       -        | -       -         -       -
+2      | P2 reads X (Read-Miss)       | 10  80 | 10      VALID     -       -        | 10      VALID     -       -        | -       -         -       -
+3      | P3 reads X (Read-Miss)       | 10  80 | 10      VALID     -       -        | 10      VALID     -       -        | 10      VALID     -       -
+4      | P1 updates X=35 (Write-Hit)  | 35  80 | 35      RES       -       -        | 10      INV       -       -        | 10      INV       -       -
+5      | P1 reads Z (Read-Miss)       | 35  80 | 35      RES       80      VALID    | 10      INV       -       -        | 10      INV       -       -
+6      | P2 reads X (Read-Miss)       | 35  80 | 35      VALID     80      VALID    | 35      VALID     -       -        | 10      INV       -       -
+7      | P3 updates X=15 (Write-Miss) | 35  80 | 35      INV       80      VALID    | 35      INV       -       -        | 15      DIRTY     -       -
+8      | P1 updates Z=81 (Write-Hit)  | 35  81 | 35      INV       81      RES      | 35      INV       -       -        | 15      DIRTY     -       -
+=============================================================================================================================================================
+
+Final state
+-----------
+Memory : X=35, Z=81
+P1     : X=35 (INV), Z=81 (RES)
+P2     : X=35 (INV), Z=-
+P3     : X=15 (DIRTY), Z=-
+
+Statistics
+----------
+Read hits  / misses      : 0 / 5
+Write hits / misses      : 2 / 1
+Replacements             : 0
+Bus invalidations        : 3
+Bus update broadcasts    : 0
+Memory write-backs       : 0
+Memory write-throughs    : 2
+
+
+PROTOCOL: WRITE_UPDATE_PARTIAL_WRITE_THROUGH
+============================================================================================================================================================
+Serial | Event                       | Memory | P1 Cache                           | P2 Cache                           | P3 Cache
+       |                             | X   Z  | Val(X)  State(X)  Val(Z)  State(Z) | Val(X)  State(X)  Val(Z)  State(Z) | Val(X)  State(X)  Val(Z)  State(Z)
+============================================================================================================================================================
+0      | Initial State               | 10  80 | -       -         -       -        | -       -         -       -        | -       -         -       -
+1      | P1 reads X (Read-Miss)      | 10  80 | 10      V-EXCL    -       -        | -       -         -       -        | -       -         -       -
+2      | P2 reads X (Read-Miss)      | 10  80 | 10      SHARED    -       -        | 10      SHARED    -       -        | -       -         -       -
+3      | P3 reads X (Read-Miss)      | 10  80 | 10      SHARED    -       -        | 10      SHARED    -       -        | 10      SHARED    -       -
+4      | P1 updates X=35 (Write-Hit) | 35  80 | 35      SHARED    -       -        | 35      SHARED    -       -        | 35      SHARED    -       -
+5      | P1 reads Z (Read-Miss)      | 35  80 | 35      SHARED    80      V-EXCL   | 35      SHARED    -       -        | 35      SHARED    -       -
+6      | P2 reads X (Read-Hit)       | 35  80 | 35      SHARED    80      V-EXCL   | 35      SHARED    -       -        | 35      SHARED    -       -
+7      | P3 updates X=15 (Write-Hit) | 15  80 | 15      SHARED    80      V-EXCL   | 15      SHARED    -       -        | 15      SHARED    -       -
+8      | P1 updates Z=81 (Write-Hit) | 15  80 | 15      SHARED    81      DIRTY    | 15      SHARED    -       -        | 15      SHARED    -       -
+============================================================================================================================================================
+
+Final state
+-----------
+Memory : X=15, Z=80
+P1     : X=15 (SHARED), Z=81 (DIRTY)
+P2     : X=15 (SHARED), Z=-
+P3     : X=15 (SHARED), Z=-
+
+Statistics
+----------
+Read hits  / misses      : 1 / 4
+Write hits / misses      : 3 / 0
+Replacements             : 0
+Bus invalidations        : 0
+Bus update broadcasts    : 2
+Memory write-backs       : 0
+Memory write-throughs    : 2
+
+
+PROTOCOL: WRITE_UPDATE_PARTIAL_WRITE_BACK
+============================================================================================================================================================
+Serial | Event                       | Memory | P1 Cache                           | P2 Cache                           | P3 Cache
+       |                             | X   Z  | Val(X)  State(X)  Val(Z)  State(Z) | Val(X)  State(X)  Val(Z)  State(Z) | Val(X)  State(X)  Val(Z)  State(Z)
+============================================================================================================================================================
+0      | Initial State               | 10  80 | -       -         -       -        | -       -         -       -        | -       -         -       -
+1      | P1 reads X (Read-Miss)      | 10  80 | 10      V-EXCL    -       -        | -       -         -       -        | -       -         -       -
+2      | P2 reads X (Read-Miss)      | 10  80 | 10      S-CLEAN   -       -        | 10      S-CLEAN   -       -        | -       -         -       -
+3      | P3 reads X (Read-Miss)      | 10  80 | 10      S-CLEAN   -       -        | 10      S-CLEAN   -       -        | 10      S-CLEAN   -       -
+4      | P1 updates X=35 (Write-Hit) | 10  80 | 35      S-DIRTY   -       -        | 35      S-CLEAN   -       -        | 35      S-CLEAN   -       -
+5      | P1 reads Z (Read-Miss)      | 10  80 | 35      S-DIRTY   80      V-EXCL   | 35      S-CLEAN   -       -        | 35      S-CLEAN   -       -
+6      | P2 reads X (Read-Hit)       | 10  80 | 35      S-DIRTY   80      V-EXCL   | 35      S-CLEAN   -       -        | 35      S-CLEAN   -       -
+7      | P3 updates X=15 (Write-Hit) | 10  80 | 15      S-CLEAN   80      V-EXCL   | 15      S-CLEAN   -       -        | 15      S-DIRTY   -       -
+8      | P1 updates Z=81 (Write-Hit) | 10  80 | 15      S-CLEAN   81      DIRTY    | 15      S-CLEAN   -       -        | 15      S-DIRTY   -       -
+============================================================================================================================================================
+
+Final state
+-----------
+Memory : X=10, Z=80
+P1     : X=15 (S-CLEAN), Z=81 (DIRTY)
+P2     : X=15 (S-CLEAN), Z=-
+P3     : X=15 (S-DIRTY), Z=-
+
+Statistics
+----------
+Read hits  / misses      : 1 / 4
+Write hits / misses      : 3 / 0
+Replacements             : 0
+Bus invalidations        : 0
+Bus update broadcasts    : 2
+Memory write-backs       : 0
+Memory write-throughs    : 0
